@@ -57,6 +57,8 @@ ClusterwiseJICA <- function(X, k = 2, nc = 2, starts = 10){
   return(out)
 }
 
-
-
-
+Lir$newp
+Tucker(SR1, icaparam$Sr[[2]])
+Tucker(SR2, icaparam$Sr[[1]])
+Tucker(A1, icaparam$Mr[[2]])
+Tucker(A2, icaparam$Mr[[1]])

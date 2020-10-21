@@ -13,7 +13,7 @@ sortX <- function(X, p){
   }
   return(NewList)
 }
-p <- CICA:::clusf(20,2)
-List <- sortX(X, p)
+#p <- CICA:::clusf(20,2)
+#List <- sortX(X, p)
 
 

@@ -15,7 +15,7 @@ XhatsAndLir <- function(X, Sr, Ahats){
   for(outer in 1:N){
     
     for(inner in 1:nClus){
-      xhat <- Sr[[inner]] %*% Ah[[inner]][outer,]
+      xhat <- Sr[[inner]] %*% Ahats[[inner]][outer,]
       ss[outer,inner] <- sum( (X[,outer] - xhat)^2 )
     }
   }
@@ -33,12 +33,12 @@ XhatsAndLir <- function(X, Sr, Ahats){
   return(out)
 }
 
-Sr <- icaparam$Sr
-Ahats <- Ah
+#Sr <- icaparam$Sr
+#Ahats <- Ah
 
-pandloss <- XhatsAndLir(X,Sr,Ahats)
-pandloss$newp
-pandloss$lossvec
-pandloss$loss
-p
-newp
+# pandloss <- XhatsAndLir(X,Sr,Ahats)
+# pandloss$newp
+# pandloss$lossvec
+# pandloss$loss
+# p
+# newp

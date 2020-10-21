@@ -16,5 +16,5 @@ ICAonList <- function(List, nc){
   return(params)
 }
 
-icaparam <- ICAonList(List, nc = 2)
+#icaparam <- ICAonList(List, nc = 2)
 

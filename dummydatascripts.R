@@ -74,4 +74,4 @@ CICA::Tucker(A2, icar2$M)
 rm('icar1', 'icar2', 'icawhole','S11','S12','S21','S22','S1','S2','Sa','Sb','n')
 
 
-p <- CICA:::clusf(20,2)
+

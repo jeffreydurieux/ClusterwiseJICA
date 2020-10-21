@@ -24,4 +24,4 @@ Ahats <- function(X, icapara){
   return(AhatClus)
 }
 
-Ah <- Ahats(X, icapara = icaparam)
+#Ah <- Ahats(X, icapara = icaparam)

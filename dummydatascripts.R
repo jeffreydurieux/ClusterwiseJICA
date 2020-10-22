@@ -52,6 +52,26 @@ X2 <- SR2 %*% t(A2)
 
 X <- cbind(X1,X2)
 
+addError<-function(datablock,error)
+{
+  
+  errorM<-replicate(ncol(datablock),rnorm(nrow(datablock)))
+  errorM<-SSequal(errorM,datablock)
+  errorlevel<-error/(1-error)
+  
+  res<-datablock + (errorM * sqrt(errorlevel))
+  return(res)
+}
+
+SSequal<-function(m1,m2)
+{
+  res<-(m1/sqrt(sum(m1^2)) * sqrt(sum(m2^2))) #R
+  return(res)
+}
+
+X <- addError(X, .01)
+
+
 ### checks ICA ####
 # Single ICA 
 icawhole <- icafast(X, nc = 2)

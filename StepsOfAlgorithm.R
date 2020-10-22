@@ -14,6 +14,7 @@ source('sortX.R')
 source('ICAonList.R')
 source('computeAhats.R')
 source('computeXhats.R')
+source('Avoid_nc_N.R')
 
 ClusterwiseJICA <- function(X, k = 2, nc = 2, starts = 10){
   
@@ -43,11 +44,16 @@ ClusterwiseJICA <- function(X, k = 2, nc = 2, starts = 10){
       List <- sortX(X, p)
       
       # algo step 2
+      
+      #### add stop warning over here ##### about nc <= k_n 
       icaparam <- ICAonList(List, nc = nc)
       
       # algo step 3
       Ahh <- Ahats(X = X, icapara = icaparam)
       Lir <- XhatsAndLir(X = X, Sr = icaparam$Sr, Ahats = Ahh)
+      
+      # avoid clus size lower than nc
+      Lir$newp <- Avoid_nc_N(Lir$newp, Lir$lossvec, nc = nc)
       
       lossiter <- c(lossiter, Lir$loss)
       #abs(lossiter[iter + 1] - lossiter[iter])  < .00001
@@ -67,8 +73,8 @@ ClusterwiseJICA <- function(X, k = 2, nc = 2, starts = 10){
   
   return(ResultsStarts)
 }
-
-res <- ClusterwiseJICA(X = X, k = 3, nc = 2, starts = 100)
+rm(res)
+res <- ClusterwiseJICA(X = X, k = 2, nc = 11, starts = 100)
 
 minloss <- sapply(seq_along(res), function(anom) tail(res[[anom]]$lossiter,1))
 plot(minloss)
@@ -77,10 +83,12 @@ id <- minloss == min(minloss)
 
 resmin <- res[id]
 
-resmin[[4]]$p
+rr <- resmin[[4]]
+rr$p
+table(rr$p)
 
 
-Lir$newp
+
 Tucker(SR1, icaparam$Sr[[2]])
 Tucker(SR2, icaparam$Sr[[1]])
 Tucker(A1, icaparam$Mr[[2]])

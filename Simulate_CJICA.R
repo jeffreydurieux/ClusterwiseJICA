@@ -25,14 +25,20 @@ SSequal<-function(m1,m2)
 }
 
 
-Simulate_CJICA <- function(Nk, Vm, K, Qm, E, M, type = 1){
+Simulate_CJICA <- function(Nk, Vm, K, Qm, E, M, type = 1, cor = .5){
 
+  # type 1: Sk %*% Ak
+  # type 2: S %*% Ak
+  # type 3: Sk %*% A
+  # type 4: is type 1 but with pairwise correlated signals
+  # note type for only when K = 2
+  
   dnames <- c('b')
   
   P <- rep(1:K, each = Nk)
   
   Slist <- list()
-  if(type == 1 | type == 3){
+  if(type == 1 | type == 3 | type == 4){
     for(k in 1:K){
       
       S <- matrix(data = NA, nrow = Vm*M, ncol = Qm)
@@ -47,6 +53,22 @@ Simulate_CJICA <- function(Nk, Vm, K, Qm, E, M, type = 1){
         S[, q] <- s
       }
       Slist[[k]] <- S
+      
+      if(type == 4){
+        r <- matrix(c(1,cor,cor,1), nrow = 2)
+        chol <- chol(r)
+        S2 <- matrix(data = NA, nrow = Vm*M, ncol = Qm)
+        
+        for(sig in 1:ncol(Slist[[1]])){
+          ss <- cbind(Slist[[1]][,sig],
+                      s <- icasamp(dname = sample(dnames, size = 1),
+                                   query = 'rnd', nsamp = Vm)  )  
+          ss <- ss %*% chol
+          S2[,sig] <- ss[,2]
+        }
+        Slist[[2]] <- S2
+      }
+      
     }  
   }else if(type == 2){
     S <- matrix(data = NA, nrow = Vm*M, ncol = Qm)
@@ -72,13 +94,12 @@ Simulate_CJICA <- function(Nk, Vm, K, Qm, E, M, type = 1){
     Alist[[k]] <- A
   }
   
-  if(type == 1){
+  if(type == 1 | type == 4){
     X <- lapply(seq_along(Alist), function(anom)
       Slist[[anom]] %*% t(Alist[[anom]]))
   }else if(type == 2){
     X <- lapply(seq_along(Alist), function(anom)
       Slist[[1]] %*% t(Alist[[anom]]))
-    
   }else{
     X <- lapply(seq_along(Alist), function(anom)
       Slist[[anom]] %*% t(Alist[[1]]))

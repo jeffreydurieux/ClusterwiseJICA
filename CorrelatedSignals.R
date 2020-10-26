@@ -34,11 +34,3 @@ diag(r) <- 1
 r
 isSymmetric(r)
 
-S <- replicate(3,runif(1000, min = -2, max=2))
-S <- S  %*% chol(r)
-cor(S)
-
-X <- S %*% matrix(data = rnorm(3*3), nrow = 3)
-
-ica <- ica::icafast(X, nc = 3)
-multiway::congru(ica$S, S)

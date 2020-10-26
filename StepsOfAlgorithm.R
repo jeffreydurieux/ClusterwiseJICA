@@ -65,8 +65,13 @@ ClusterwiseJICA <- function(X, k = 2, nc = 2, starts = 10){
     
     out <- list()
     out$p <- Lir$newp
+    out$ica <- icaparam
     out$lossiter <- lossiter
     ResultsStarts[[start]] <- out
+    
+    # make some sort of bubble sort algorithm so that only 2 starts are stored
+    # output only the lowest start
+    
   }
   
   
@@ -74,7 +79,11 @@ ClusterwiseJICA <- function(X, k = 2, nc = 2, starts = 10){
   return(ResultsStarts)
 }
 rm(res)
-res <- ClusterwiseJICA(X = X, k = 2, nc = 11, starts = 100)
+
+##### data contains 20 subjects with 2 underlying source components (two modalities each. since 2 underlying source components are used the number of clusters equals 2)
+
+res <- ClusterwiseJICA(X = X, k = 4, nc = 3, starts = 10)
+
 
 minloss <- sapply(seq_along(res), function(anom) tail(res[[anom]]$lossiter,1))
 plot(minloss)
@@ -83,13 +92,22 @@ id <- minloss == min(minloss)
 
 resmin <- res[id]
 
-rr <- resmin[[4]]
+sols <- length(resmin)
+id <- sample(sols,1)
+rr <- resmin[[id]]
 rr$p
+k4 <- tail(rr$lossiter,n = 1)
+
 table(rr$p)
 
 
+library(CICA)
+Tucker(SR1, rr$ica$Sr[[1]])
+Tucker(SR2, rr$ica$Sr[[2]])
 
-Tucker(SR1, icaparam$Sr[[2]])
-Tucker(SR2, icaparam$Sr[[1]])
-Tucker(A1, icaparam$Mr[[2]])
-Tucker(A2, icaparam$Mr[[1]])
+Tucker(SR1, rr$ica$Sr[[3]])
+Tucker(SR2, rr$ica$Sr[[3]])
+
+
+Tucker(A1, rr$ica$Mr[[2]])
+Tucker(A2, rr$ica$Mr[[1]])

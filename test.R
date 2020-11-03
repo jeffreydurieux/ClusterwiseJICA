@@ -16,9 +16,9 @@ library(CICA)
 library(mclust)
 library(plotly)
 
-K <- 3; Q <- 2
-data <- Simulate_CJICA(Nk = 20, Vm = 1000, K = K, Qm = Q, E = .01
-                       , M = 2, type = 4, cor = 2)
+K <- 2; Q <- 2
+data <- Simulate_CJICA(Nk = 50, Vm = 1000, K = K, Qm = Q, E = .5
+                       , M = 2, type = 1, cor = 2)
 str(data)
 cor(data$S[[1]],data$S[[2]])
 cor(data$S[[1]],data$S[[3]])
@@ -57,8 +57,8 @@ modRV(data$S[[2]], rr$ica$Sr[[1]])
 Tucker(data$A[[1]], rr$ica$Mr[[1]]) %>% round(digits = 3)
 Tucker(data$A[[1]], rr$ica$Mr[[2]]) %>% round(digits = 3)
 
-Tucker(data$A[[1]], rr$ica$Mr[[2]]) %>% round(digits = 3)
 Tucker(data$A[[2]], rr$ica$Mr[[1]]) %>% round(digits = 3)
+Tucker(data$A[[2]], rr$ica$Mr[[2]]) %>% round(digits = 3)
 
 modRV(data$A[[1]], rr$ica$Mr[[1]])
 modRV(data$A[[2]], rr$ica$Mr[[2]])

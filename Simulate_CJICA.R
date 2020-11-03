@@ -118,8 +118,8 @@ Simulate_CJICA <- function(Nk, Vm, K, Qm, E, M, type = 1, cor = .5){
   return(out)  
 }
 
-# test1 <- Simulate_CJICA(Nk = 10, Vm = 500,K = 2, 
-#                         Qm = 2, E = .1, M = 2, type = 1)
+test1 <- Simulate_CJICA(Nk = 10, Vm = 500,K = 2, 
+                        Qm = 2, E = .1, M = 2, type = 1)
 # str(test1)
 # 
 # test2 <- Simulate_CJICA(Nk = 10, Vm = 500,K = 2, 

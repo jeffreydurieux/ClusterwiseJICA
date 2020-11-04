@@ -3,9 +3,11 @@
 
 # Main function of clusterwise JICA
 ClusterwiseJICA <- function(X, k = 2, nc = 2, starts = 10, scale = T){
+  #### change this
   
-  f <- sqrt(1000/sum(X^2))
-  X <- f*X
+  #if scale
+  #f <- sqrt(1000/sum(X^2))
+  #X <- f*X
 
   ResultsStarts <- list()
   

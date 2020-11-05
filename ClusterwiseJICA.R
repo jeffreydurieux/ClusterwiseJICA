@@ -2,7 +2,7 @@
 # Author: Jeffrey Durieux, MSc
 
 # Main function of clusterwise JICA
-ClusterwiseJICA <- function(X, k = 2, nc = 2, starts = 10, scale = T){
+ClusterwiseJICA <- function(X, k = 2, nc = 2, starts = 10, scale = T, rational = NULL){
   #### change this
   
   #if scale
@@ -28,7 +28,11 @@ ClusterwiseJICA <- function(X, k = 2, nc = 2, starts = 10, scale = T){
       
       # algo step 1
       if(iter == 1){
-        p <- CICA:::clusf(ncol(X), nClus = k)
+        if(!is.null(rational)){
+          p <- rational
+        }else{
+          p <- CICA:::clusf(ncol(X), nClus = k)
+        }
       }else{
         p <- Lir$newp
       }

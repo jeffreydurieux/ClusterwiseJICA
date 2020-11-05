@@ -23,15 +23,18 @@ X <- t(X)
 dim(X)
 rm(correlations20components, correlations70components, partialCorrelations20components, partialCorrelations70components, FCdefaultModeNetwork2mm, FCdefaultModeNetwork4mm, FCexecutiveControl2mm, FCexecutiveControl4mm, VBM2mm, VBM4mm, ALFF2mm, ALFF4mm)
 
-graztest <- ClusterwiseJICA(X = X, k = 2, nc = 5, scale = F, starts = 2)
+Alzheimer <- ifelse(Alzheimer == 0, 1, 2)
+set.seed(2407)
+graztest <- ClusterwiseJICA(X = X, k = 2, nc = 5, scale = F, starts = 2, rational = NULL)
 graztest[[1]]$p
 
-Alzheimer <- ifelse(Alzheimer == 0, 1, 2)
+
 table(Alzheimer)
 
 table(graztest[[1]]$p, Alzheimer)
-graztest[[2]]$p
-table(graztest[[2]]$p, Alzheimer)
+tab <- table(graztest[[1]]$p, Alzheimer)
+caret::confusionMatrix(tab)graztest[[2]]$p
+
 
 tt <- table(graztest[[1]]$p, Alzheimer)
 caret::confusionMatrix(tt)

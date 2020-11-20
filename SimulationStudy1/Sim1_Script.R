@@ -11,8 +11,118 @@
 #   - number of R, 2, 3, 4
 #   - N per cluster 20, 30, 50
 #   - one-to-one correlation: no, low (.25), medium (.50)
-#   - SNR 19, 4, .33 (5%, 40%, 75%)
+#   - SNR  4, 1.5, .33 (20%, 40%, 75%)
 # 
 # Fixed: 5000 voxels, 100 random starts
 
 #### correlated clusters
+library(mclust) #ARI
+library(plotly) # '>' operator
+source('sortX.R')
+source('ICAonList.R')
+source('computeAhats.R')
+source('computeXhats.R')
+source('Avoid_nc_N.R')
+source('Simulate_CJICA.R')
+source('ClusterwiseJICA.R')
+
+Tucker <- function(X, Y){
+  return (diag(1 / sqrt(colSums(X^2))) %*% crossprod(X,Y) %*% diag(1 / sqrt(colSums(Y^2))) )
+}
+
+modRV <- function(X, Y){
+  
+  if(nrow(X) != nrow(Y)){
+    stop('Number of rows of input matrices are not equal')
+  }
+  
+  XXtilde <- ( X %*% t(X) ) - diag (diag( X %*% t(X) ) )
+  YYtilde <- ( Y %*% t(Y) ) - diag (diag( Y %*% t(Y) ) )
+  
+  res <-  ( t(c(XXtilde)) %*% c(YYtilde) ) /
+    ( sqrt( ( t(c(XXtilde)) %*% c(XXtilde)) * ( t(c(YYtilde)) %*% c(YYtilde)) ) )
+  
+  
+  return(res)
+}
+Q <- c(2,5,10)
+R <- c(2, 3, 4)
+N <- c(20, 30, 50)
+rho <- c(0, .50, .75)
+E <- c(.2, .4, .75)
+rep <- 1:20
+grid <- expand.grid(Q = Q, R = R, N = N, rho = rho, E = E, rep = rep)
+
+
+for(sim in 1:nrow(grid)){
+  
+  set.seed(sim)
+  
+  if(grid[sim, ]$rho == 0){
+    type = 1
+  }else{
+    type = 4
+  }
+  
+  ##### simulate #####
+  simdata <- Simulate_CJICA(Nk = grid[sim,]$N, 
+                            Vm = 2500,
+                            K = grid[sim, ]$R,
+                            Qm = grid[sim, ]$Q,
+                            E = grid[sim, ]$E,
+                            M = 2,
+                            cor = grid[sim, ]$rho,
+                            type = type 
+                          )
+  
+  
+  ##### analyse #######
+  ptm <- proc.time()
+  cjica <- ClusterwiseJICA(X = simdata$Xe, k = grid[sim,]$R,
+                           nc = grid[sim, ]$Q, starts = 100, scale = T)
+  time <- proc.time() - ptm
+  
+  ##### evaluate ######
+  loss100 <- sapply(seq_along(cjica), function(anom) tail(cjica[[anom]]$lossiter, n = 1))
+  optimal <- cjica[[which.min(loss100)]]
+  
+  ### adjusted rand ###
+  ari <- adjustedRandIndex(simdata$P, optimal$p)
+  
+  ### Tucker S ###
+  for(tucks in 1:length(simdata$S) ){
+    
+    tuckS <- list()
+    if(grid[sim,]$R == 2){
+      Tucker(simdata$S[[tucks]], optimal$ica$Sr[[1]]) %>% abs %>% 
+        apply(MARGIN = 2, max) %>% mean #i and 1
+      Tucker(simdata$S[[tucks]], optimal$ica$Sr[[2]]) %>% abs %>% 
+        apply(MARGIN = 2, max) %>% mean #i and 1
+    }else if(grid[sim,]$R == 3){
+      Tucker(simdata$S[[tucks]], optimal$ica$Sr[[1]]) %>% abs %>% 
+        apply(MARGIN = 2, max) %>% mean #i and 1
+      Tucker(simdata$S[[tucks]], optimal$ica$Sr[[1]]) %>% abs %>% 
+        apply(MARGIN = 2, max) %>% mean #i and 2
+      Tucker(simdata$S[[tucks]], optimal$ica$Sr[[1]]) %>% abs %>% 
+        apply(MARGIN = 2, max) %>% mean #i and 3
+      
+    }else{
+      Tucker(simdata$S[[tucks]], optimal$ica$Sr[[1]]) %>% abs %>% 
+        apply(MARGIN = 2, max) %>% mean #i and 1
+      Tucker(simdata$S[[tucks]], optimal$ica$Sr[[2]]) %>% abs %>% 
+        apply(MARGIN = 2, max) %>% mean #i and 2
+      Tucker(simdata$S[[tucks]], optimal$ica$Sr[[3]]) %>% abs %>% 
+        apply(MARGIN = 2, max) %>% mean #i and 3
+      Tucker(simdata$S[[tucks]], optimal$ica$Sr[[4]]) %>% abs %>% 
+        apply(MARGIN = 2, max) %>% mean #i and 4
+    }
+    
+    
+  }
+  Tucker(simdata$S[[1]], optimal$ica$Sr[[1]])
+  Tucker(simdata$S[[1]], optimal$ica$Sr[[2]])
+  
+  Tucker(simdata$S[[1]], optimal$ica$Sr[[1]])
+}
+
+

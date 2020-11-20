@@ -5,10 +5,14 @@
 ClusterwiseJICA <- function(X, k = 2, nc = 2, starts = 10, scale = T, rational = NULL){
   #### change this
   
-  #if scale
-  #f <- sqrt(1000/sum(X^2))
-  #X <- f*X
-
+  if(scale == T){
+    f1 <- sqrt(5000/sum(X[1:2500,]^2))
+    f2 <- sqrt(5000/sum(X[2501:5000,]^2))
+    X1 <- f1*X[1:2500,]
+    X2 <- f2*X[2501:5000,]
+    X <- rbind(X1,X2)
+  }
+  
   ResultsStarts <- list()
   
   for(start in 1:starts){

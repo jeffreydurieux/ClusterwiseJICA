@@ -174,68 +174,68 @@ Simulate_CJICA <- function(Nk, Vm, K, Qm, E, M, type = 1, cor = .5){
   return(out)  
 }
 
-test1 <- Simulate_CJICA(Nk = 10, Vm = 2500,K = 4, 
-                        Qm = 5, E = .1, M = 2, type = 4, cor = .5)
-str(test1)
-
-combn(1:4,2)
-
-mean(
-c(
-modRV(test1$S[[1]], test1$S[[2]]),
-modRV(test1$S[[1]], test1$S[[3]]),
-modRV(test1$S[[1]], test1$S[[4]]),
-modRV(test1$S[[2]], test1$S[[3]]),
-modRV(test1$S[[2]], test1$S[[4]]),
-modRV(test1$S[[3]], test1$S[[4]]) ) )
-
-modRV(test1$S[[1]], test1$S[[2]])
-modRV(test1$S[[1]], test1$S[[3]])
-modRV(test1$S[[1]], test1$S[[4]])
-modRV(test1$S[[2]], test1$S[[3]])
-modRV(test1$S[[2]], test1$S[[4]])
-modRV(test1$S[[3]], test1$S[[4]]) 
-
-
-Tucker(test1$S[[1]], test1$S[[2]]) %>% round(digits = 3)
-Tucker(test1$S[[1]], test1$S[[3]]) %>% round(digits = 3)
-Tucker(test1$S[[1]], test1$S[[4]]) %>% round(digits = 3)
-Tucker(test1$S[[2]], test1$S[[3]]) %>% round(digits = 3)
-Tucker(test1$S[[2]], test1$S[[4]]) %>% round(digits = 3)
-Tucker(test1$S[[3]], test1$S[[4]]) %>% round(digits = 3)
-
-
-
-test1 <- Simulate_CJICA(Nk = 10, Vm = 2500,K = 3, 
-                        Qm = 2, E = .1, M = 2, type = 4)
-str(test1)
-
-combn(1:3,2)
-mean( c(
-modRV(test1$S[[1]], test1$S[[2]]) ,
-modRV(test1$S[[1]], test1$S[[3]]) ,
-modRV(test1$S[[2]], test1$S[[3]]) ))
-
-modRV(test1$S[[1]], test1$S[[2]]) 
-modRV(test1$S[[1]], test1$S[[3]]) 
-modRV(test1$S[[2]], test1$S[[3]]) 
-
-
-test1 <- Simulate_CJICA(Nk = 10, Vm = 2500,K = 2, 
-                        Qm = 2, E = .1, M = 2, type = 4)
-str(test1)
-
-combn(1:2,2)
-
-modRV(test1$S[[1]], test1$S[[2]]) 
-
-
-
-
-Tucker(test1$S[[1]], test1$S[[2]])
-Tucker(test1$S[[2]], test1$S[[3]])
-Tucker(test1$S[[3]], test1$S[[4]])
+# test1 <- Simulate_CJICA(Nk = 10, Vm = 2500,K = 4, 
+#                         Qm = 5, E = .1, M = 2, type = 4, cor = .5)
+# str(test1)
 # 
-# test2 <- Simulate_CJICA(Nk = 10, Vm = 500,K = 2, 
-#                         Qm = 2, E = .1, M = 2, type = 2)
-# str(test2)
+# combn(1:4,2)
+# 
+# mean(
+# c(
+# modRV(test1$S[[1]], test1$S[[2]]),
+# modRV(test1$S[[1]], test1$S[[3]]),
+# modRV(test1$S[[1]], test1$S[[4]]),
+# modRV(test1$S[[2]], test1$S[[3]]),
+# modRV(test1$S[[2]], test1$S[[4]]),
+# modRV(test1$S[[3]], test1$S[[4]]) ) )
+# 
+# modRV(test1$S[[1]], test1$S[[2]])
+# modRV(test1$S[[1]], test1$S[[3]])
+# modRV(test1$S[[1]], test1$S[[4]])
+# modRV(test1$S[[2]], test1$S[[3]])
+# modRV(test1$S[[2]], test1$S[[4]])
+# modRV(test1$S[[3]], test1$S[[4]]) 
+
+
+# Tucker(test1$S[[1]], test1$S[[2]]) %>% round(digits = 3)
+# Tucker(test1$S[[1]], test1$S[[3]]) %>% round(digits = 3)
+# Tucker(test1$S[[1]], test1$S[[4]]) %>% round(digits = 3)
+# Tucker(test1$S[[2]], test1$S[[3]]) %>% round(digits = 3)
+# Tucker(test1$S[[2]], test1$S[[4]]) %>% round(digits = 3)
+# Tucker(test1$S[[3]], test1$S[[4]]) %>% round(digits = 3)
+# 
+# 
+# 
+# test1 <- Simulate_CJICA(Nk = 10, Vm = 2500,K = 3,
+#                        Qm = 2, E = .1, M = 2, type = 4)
+#str(test1)
+
+# combn(1:3,2)
+# mean( c(
+# modRV(test1$S[[1]], test1$S[[2]]) ,
+# modRV(test1$S[[1]], test1$S[[3]]) ,
+# modRV(test1$S[[2]], test1$S[[3]]) ))
+# 
+# modRV(test1$S[[1]], test1$S[[2]]) 
+# modRV(test1$S[[1]], test1$S[[3]]) 
+# modRV(test1$S[[2]], test1$S[[3]]) 
+# 
+# 
+# test1 <- Simulate_CJICA(Nk = 10, Vm = 2500,K = 2, 
+#                         Qm = 2, E = .1, M = 2, type = 4)
+# str(test1)
+# 
+# combn(1:2,2)
+# 
+# modRV(test1$S[[1]], test1$S[[2]]) 
+# 
+# 
+# 
+# 
+# Tucker(test1$S[[1]], test1$S[[2]])
+# Tucker(test1$S[[2]], test1$S[[3]])
+# Tucker(test1$S[[3]], test1$S[[4]])
+# # 
+# # test2 <- Simulate_CJICA(Nk = 10, Vm = 500,K = 2, 
+# #                         Qm = 2, E = .1, M = 2, type = 2)
+# # str(test2)

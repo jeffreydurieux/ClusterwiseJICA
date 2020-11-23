@@ -45,6 +45,42 @@ modRV <- function(X, Y){
   
   return(res)
 }
+
+perturbation <- function(p, percentage = 0.1){
+  
+  clusters <- sort(unique(p))
+  sel <- ceiling(length(p) * percentage )
+  selected <- sample(1:length(p), size = sel, replace = F)
+  
+  if(length(selected) == 1){
+    # change one cluster
+    oriclus <- p[selected]
+    newclus <- which(clusters != oriclus)
+    
+    if(length(newclus) > 1){
+      newclus <- sample(newclus, size = 1)
+    }
+    
+    np <- replace(p, selected, newclus)
+    
+  }else{
+    # change multiple clusters
+    np <- p
+    for(i in 1:length(selected)){
+      oriclus <- p[selected[i]]
+      newclus <- which(clusters != oriclus)
+      
+      if(length(newclus) > 1){
+        newclus <- sample(newclus, size = 1)
+      }
+      
+      np <- replace(np, selected[i], newclus) # check if this works
+    }
+  }
+  return(np)
+}
+
+
 Q <- c(2,5,10)
 R <- c(2, 3, 4)
 N <- c(20, 30, 50)
@@ -75,12 +111,34 @@ for(sim in 1:nrow(grid)){
                             type = type 
                           )
   
+  #### check tucker between signals of clusters####
+  
+  rhotuck <- numeric()
+  combs <- combn(1:grid[sim,]$R, m = 2)
+  for(com in 1:ncol(combs)){
+    rhotuck[com] <- diag(Tucker(simdata$S[[combs[1,com]]],
+                simdata$S[[combs[2,com]]])) %>% mean
+  }
+  combs <- rbind(combs,rhotuck)
   
   ##### analyse #######
   ptm <- proc.time()
   cjica <- ClusterwiseJICA(X = simdata$Xe, k = grid[sim,]$R,
                            nc = grid[sim, ]$Q, starts = 100, scale = T)
   time <- proc.time() - ptm
+  
+  cjicaP <- ClusterwiseJICA(X = simdata$Xe, k = grid[sim,]$R,
+                           nc = grid[sim, ]$Q, starts = 1, scale = T,
+                           rational = simdata$P )
+  
+  cjicaperbs <- list()
+  for(perbs in 1:10){
+    pert <- perturbation(p = simdata$P, percentage = 0.15)
+    cjicaPert <- ClusterwiseJICA(X = simdata$Xe, k = grid[sim,]$R,
+                                 nc = grid[sim, ]$Q, starts = 1, scale = T,
+                                 rational = pert)
+    cjicaperbs[[perbs]] <- cjicaPert[[1]]
+  }
   
   ##### evaluate ######
   loss100 <- sapply(seq_along(cjica), function(anom) tail(cjica[[anom]]$lossiter, n = 1))
@@ -90,39 +148,82 @@ for(sim in 1:nrow(grid)){
   ari <- adjustedRandIndex(simdata$P, optimal$p)
   
   ### Tucker S ###
+  tuckS <- list()
   for(tucks in 1:length(simdata$S) ){
     
-    tuckS <- list()
     if(grid[sim,]$R == 2){
-      Tucker(simdata$S[[tucks]], optimal$ica$Sr[[1]]) %>% abs %>% 
-        apply(MARGIN = 2, max) %>% mean #i and 1
+      tuckS[[tucks]] <- c(Tucker(simdata$S[[tucks]], optimal$ica$Sr[[1]]) %>% abs %>% 
+        apply(MARGIN = 2, max) %>% mean, #i and 1
       Tucker(simdata$S[[tucks]], optimal$ica$Sr[[2]]) %>% abs %>% 
-        apply(MARGIN = 2, max) %>% mean #i and 1
+        apply(MARGIN = 2, max) %>% mean )#i and 1
     }else if(grid[sim,]$R == 3){
-      Tucker(simdata$S[[tucks]], optimal$ica$Sr[[1]]) %>% abs %>% 
-        apply(MARGIN = 2, max) %>% mean #i and 1
-      Tucker(simdata$S[[tucks]], optimal$ica$Sr[[1]]) %>% abs %>% 
-        apply(MARGIN = 2, max) %>% mean #i and 2
-      Tucker(simdata$S[[tucks]], optimal$ica$Sr[[1]]) %>% abs %>% 
-        apply(MARGIN = 2, max) %>% mean #i and 3
+      tuckS[[tucks]] <- c(Tucker(simdata$S[[tucks]], optimal$ica$Sr[[1]]) %>% abs %>% 
+        apply(MARGIN = 2, max) %>% mean, #i and 1
+      Tucker(simdata$S[[tucks]], optimal$ica$Sr[[2]]) %>% abs %>% 
+        apply(MARGIN = 2, max) %>% mean, #i and 2
+      Tucker(simdata$S[[tucks]], optimal$ica$Sr[[3]]) %>% abs %>% 
+        apply(MARGIN = 2, max) %>% mean )  #i and 3
       
     }else{
-      Tucker(simdata$S[[tucks]], optimal$ica$Sr[[1]]) %>% abs %>% 
-        apply(MARGIN = 2, max) %>% mean #i and 1
+      tuckS[[tucks]] <- c(Tucker(simdata$S[[tucks]], optimal$ica$Sr[[1]]) %>% abs %>% 
+        apply(MARGIN = 2, max) %>% mean , #i and 1
       Tucker(simdata$S[[tucks]], optimal$ica$Sr[[2]]) %>% abs %>% 
-        apply(MARGIN = 2, max) %>% mean #i and 2
+        apply(MARGIN = 2, max) %>% mean , #i and 2
       Tucker(simdata$S[[tucks]], optimal$ica$Sr[[3]]) %>% abs %>% 
-        apply(MARGIN = 2, max) %>% mean #i and 3
+        apply(MARGIN = 2, max) %>% mean , #i and 3
       Tucker(simdata$S[[tucks]], optimal$ica$Sr[[4]]) %>% abs %>% 
-        apply(MARGIN = 2, max) %>% mean #i and 4
+        apply(MARGIN = 2, max) %>% mean) #i and 4
     }
     
+  }
+  
+  ### Tucker A ###
+  tuckA <- list()
+  for(tucks in 1:length(simdata$A) ){
+    
+    if(grid[sim,]$R == 2){
+      tuckA[[tucks]] <- c(Tucker(simdata$A[[tucks]], optimal$ica$Mr[[1]]) %>% abs %>% 
+                            apply(MARGIN = 2, max) %>% mean, #i and 1
+                          Tucker(simdata$A[[tucks]], optimal$ica$Mr[[2]]) %>% abs %>% 
+                            apply(MARGIN = 2, max) %>% mean )#i and 1
+    }else if(grid[sim,]$R == 3){
+      tuckA[[tucks]] <- c(Tucker(simdata$A[[tucks]], optimal$ica$Mr[[1]]) %>% abs %>% 
+                            apply(MARGIN = 2, max) %>% mean, #i and 1
+                          Tucker(simdata$A[[tucks]], optimal$ica$Mr[[2]]) %>% abs %>% 
+                            apply(MARGIN = 2, max) %>% mean, #i and 2
+                          Tucker(simdata$A[[tucks]], optimal$ica$Mr[[3]]) %>% abs %>% 
+                            apply(MARGIN = 2, max) %>% mean )  #i and 3
+      
+    }else{
+      tuckA[[tucks]] <- c(Tucker(simdata$A[[tucks]], optimal$ica$Mr[[1]]) %>% abs %>% 
+                            apply(MARGIN = 2, max) %>% mean , #i and 1
+                          Tucker(simdata$A[[tucks]], optimal$ica$Mr[[2]]) %>% abs %>% 
+                            apply(MARGIN = 2, max) %>% mean , #i and 2
+                          Tucker(simdata$A[[tucks]], optimal$ica$Mr[[3]]) %>% abs %>% 
+                            apply(MARGIN = 2, max) %>% mean , #i and 3
+                          Tucker(simdata$A[[tucks]], optimal$ica$Mr[[4]]) %>% abs %>% 
+                            apply(MARGIN = 2, max) %>% mean) #i and 4
+    }
     
   }
-  Tucker(simdata$S[[1]], optimal$ica$Sr[[1]])
-  Tucker(simdata$S[[1]], optimal$ica$Sr[[2]])
   
-  Tucker(simdata$S[[1]], optimal$ica$Sr[[1]])
+  #### output list object #####
+  output <- list()
+  output$id <- grid[sim,]
+  output$seed <- sim
+  output$ari <- ari
+  output$S <- tuckS
+  output$A <- tuckA
+  output$time <- time
+  output$optimal <- optimal
+  output$loss100 <- loss100
+  output$rho <- combs
+  output$cjicaP <- cjicaP[[1]]
+  output$cjicaperbs <- cjicaperbs
+  
+  ext <- paste('CJICA_sim1_',sim, '.Rdata',sep = '')
+  save(output,file = ext)
+  
 }
 
 

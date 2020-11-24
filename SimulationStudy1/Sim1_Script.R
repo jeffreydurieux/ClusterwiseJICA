@@ -231,6 +231,7 @@ for(sim in 1:nrow(grid)){
   combs <- rbind(combs,rhotuck)
   
   ##### analyse #######
+  
   ptm <- proc.time()
   cjica <- ClusterwiseJICA(X = simdata$Xe, k = grid[sim,]$R,
                            nc = grid[sim, ]$Q, starts = 100, scale = T)

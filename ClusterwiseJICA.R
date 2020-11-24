@@ -34,6 +34,22 @@ ClusterwiseJICA <- function(X, k = 2, nc = 2, starts = 10, scale = T, rational =
       if(iter == 1){
         if(!is.null(rational)){
           p <- rational
+          
+          t <- 0
+          while( any( table(p)  < nc ) & t < 100 ){
+            clusters <- 1:k
+            
+            id <- which(table(p) < nc)  
+            id_to_take <- which(table(p) > nc)
+            id_to_take <- which(p == id_to_take)
+            
+            s <- sample(id_to_take, size = 1)
+            p[s] <- sample(id, size = 1)
+            
+            t <- t + 1
+          }
+          
+          
         }else{
           p <- CICA:::clusf(ncol(X), nClus = k)
         }

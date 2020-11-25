@@ -40,6 +40,7 @@ source('computeXhats.R')
 source('Avoid_nc_N.R')
 source('Simulate_CJICA.R')
 source('ClusterwiseJICA.R')
+source('SearchEmptyClusters.R')
 
 Tucker <- function(X, Y){
   return (diag(1 / sqrt(colSums(X^2))) %*% crossprod(X,Y) %*% diag(1 / sqrt(colSums(Y^2))) )

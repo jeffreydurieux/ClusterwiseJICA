@@ -67,6 +67,12 @@ ClusterwiseJICA <- function(X, k = 2, nc = 2, starts = 10, scale = T, rational =
       Ahh <- Ahats(X = X, icapara = icaparam)
       Lir <- XhatsAndLir(X = X, Sr = icaparam$Sr, Ahats = Ahh)
       
+      # avoid empty clusters
+      if( length(unique(Lir$p)) < k ){
+        Lir$newp <- SearchEmptyClusters(nClus = k, newcluster = Lir$newp, 
+                            SSminVec = Lir$lossvec)
+      }
+      
       # avoid clus size lower than nc
       Lir$newp <- Avoid_nc_N(Lir$newp, Lir$lossvec, nc = nc)
       

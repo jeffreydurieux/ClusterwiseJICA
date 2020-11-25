@@ -7,12 +7,13 @@
 # do pam, spectral clustering and hclust ward.D2 and complete
 
 # do on full data, ICA data nc = Q per cluster or total Q (Q*R)
-
+setwd('/data/durieuxj/CJICACODE')
 library(lsa) # cosine
 library(cluster) # pam
 library(mclust) # ari
 library(kernlab) # spectral clustering
 library(plotly) # '>' operator
+library(ica)
 source('sortX.R')
 source('ICAonList.R')
 source('computeAhats.R')
@@ -22,6 +23,23 @@ source('Simulate_CJICA.R')
 source('ClusterwiseJICA.R')
 
 
+specc_err <- function(x, centers){
+  out <- tryCatch({expr = spec <- specc(x = t(simdata$Xe), 
+                                centers = grid[sim,]$R, 
+                                kernel = 'rbfdot')},
+           error = function(cond){
+             return(NA)
+           })
+  return(out)
+}
+
+args <- commandArgs(TRUE)
+#args <- as.numeric(args)
+
+splits <- split(1:4860, ceiling(seq_along(1:4860)/49))
+sp <- args[1]
+rows <- splits[[sp]]
+
 Q <- c(2,5,10)
 R <- c(2, 3, 4)
 N <- c(20, 30, 50)
@@ -30,10 +48,9 @@ E <- c(.2, .4, .75)
 rep <- 1:20
 grid <- expand.grid(Q = Q, R = R, N = N, rho = rho, E = E, rep = rep)
 
+grid <- grid[rows,]
 
 for(sim in 1:nrow(grid)){
-  
-  tmp <- proc.time()
   cat('\n')
   cat('\n')
   cat('------------')
@@ -71,19 +88,27 @@ for(sim in 1:nrow(grid)){
   
   ####### Part 1: full data ##########
   ### spectral clustering and kernelmatrix rbfdot 
-  spec <- specc(x = t(simdata$Xe), centers = grid[sim,]$R, kernel = 'rbfdot')
-  part1_p_spec_kern <- spec@.Data
+  spec <- specc_err(x = t(simdata$Xe), centers = grid[sim,]$R)
+  if(is.na(spec)){
+    errorspec <- 'raised'
+  }else{
+    errorspec <- 'not_raised'
+  }
   
-  kernmat <- kernelMatrix(spec@kernelf@.Data, t(simdata$Xe))
-  kernmat <- kernmat@.Data
-  
-  # pam and hcl with kernmat
-  d <- as.dist(1 - kernmat)
-  pam <- pam(x = d, k = grid[sim,]$R)
-  part1_p_pam_kern <- pam$clustering
-  
-  hcl <- hclust(d = d, method = 'ward.D2')
-  part1_p_hcl_kern <- cutree(hcl, k = grid[sim,]$R)
+  if(errorspec != 'raised'){
+    part1_p_spec_kern <- spec@.Data
+    
+    kernmat <- kernelMatrix(spec@kernelf@.Data, t(simdata$Xe))
+    kernmat <- kernmat@.Data
+    
+    # pam and hcl with kernmat
+    d <- as.dist(1 - kernmat)
+    pam <- pam(x = d, k = grid[sim,]$R)
+    part1_p_pam_kern <- pam$clustering
+    
+    hcl <- hclust(d = d, method = 'ward.D2')
+    part1_p_hcl_kern <- cutree(hcl, k = grid[sim,]$R)
+  }
   
   
   # pam and hcl with cosine sim
@@ -145,16 +170,17 @@ for(sim in 1:nrow(grid)){
   
   ######## part 4: CLJICA with smart starts ######
   
-  
-  cj_1_1 <- ClusterwiseJICA(X = simdata$Xe, k = grid[sim,]$R, 
-                            nc = grid[sim,]$Q, rational = part1_p_spec_kern, 
-                            starts = 1)
-  cj_1_2 <- ClusterwiseJICA(X = simdata$Xe, k = grid[sim,]$R, 
-                            nc = grid[sim,]$Q, rational = part1_p_pam_kern,
-                            starts = 1)
-  cj_1_3 <- ClusterwiseJICA(X = simdata$Xe, k = grid[sim,]$R, 
-                            nc = grid[sim,]$Q, rational = part1_p_hcl_kern,
-                            starts = 1)
+  if(errorspec != 'raised'){
+    cj_1_1 <- ClusterwiseJICA(X = simdata$Xe, k = grid[sim,]$R, 
+                              nc = grid[sim,]$Q, rational = part1_p_spec_kern, 
+                              starts = 1)
+    cj_1_2 <- ClusterwiseJICA(X = simdata$Xe, k = grid[sim,]$R, 
+                              nc = grid[sim,]$Q, rational = part1_p_pam_kern,
+                              starts = 1)
+    cj_1_3 <- ClusterwiseJICA(X = simdata$Xe, k = grid[sim,]$R, 
+                              nc = grid[sim,]$Q, rational = part1_p_hcl_kern,
+                              starts = 1)
+  }
   cj_1_4 <- ClusterwiseJICA(X = simdata$Xe, k = grid[sim,]$R, 
                             nc = grid[sim,]$Q, rational = part1_p_pam_cos,
                             starts = 1)
@@ -196,42 +222,80 @@ for(sim in 1:nrow(grid)){
   
   ####### results ########
   # ari and loss
-  ARI <- c(adjustedRandIndex(simdata$P, cj_1_1[[1]]$p),
-           adjustedRandIndex(simdata$P, cj_1_2[[1]]$p),
-           adjustedRandIndex(simdata$P, cj_1_3[[1]]$p),
-           adjustedRandIndex(simdata$P, cj_1_4[[1]]$p),
-           adjustedRandIndex(simdata$P, cj_1_5[[1]]$p),
-           
-           adjustedRandIndex(simdata$P, cj_2_1[[1]]$p),
-           adjustedRandIndex(simdata$P, cj_2_2[[1]]$p),
-           adjustedRandIndex(simdata$P, cj_2_3[[1]]$p),
-           adjustedRandIndex(simdata$P, cj_2_4[[1]]$p),
-           adjustedRandIndex(simdata$P, cj_2_5[[1]]$p),
-           
-           adjustedRandIndex(simdata$P, cj_3_1[[1]]$p),
-           adjustedRandIndex(simdata$P, cj_3_2[[1]]$p),
-           adjustedRandIndex(simdata$P, cj_3_3[[1]]$p),
-           adjustedRandIndex(simdata$P, cj_3_4[[1]]$p),
-           adjustedRandIndex(simdata$P, cj_3_5[[1]]$p))
-  
-  LOSS <- c(tail( cj_1_1[[1]]$lossiter, n = 1),
-            tail( cj_1_2[[1]]$lossiter, n = 1),
-            tail( cj_1_3[[1]]$lossiter, n = 1),
-            tail( cj_1_4[[1]]$lossiter, n = 1),
-            tail( cj_1_5[[1]]$lossiter, n = 1),
-            
-            tail( cj_2_1[[1]]$lossiter, n = 1),
-            tail( cj_2_2[[1]]$lossiter, n = 1),
-            tail( cj_2_3[[1]]$lossiter, n = 1),
-            tail( cj_2_4[[1]]$lossiter, n = 1),
-            tail( cj_2_5[[1]]$lossiter, n = 1),
-            
-            tail( cj_3_1[[1]]$lossiter, n = 1),
-            tail( cj_3_2[[1]]$lossiter, n = 1),
-            tail( cj_3_3[[1]]$lossiter, n = 1),
-            tail( cj_3_4[[1]]$lossiter, n = 1),
-            tail( cj_3_5[[1]]$lossiter, n = 1))
-  
+  if(errorspec == 'raised'){
+    ARI <- c(NA,
+             NA,
+             NA,
+             adjustedRandIndex(simdata$P, cj_1_4[[1]]$p),
+             adjustedRandIndex(simdata$P, cj_1_5[[1]]$p),
+             
+             adjustedRandIndex(simdata$P, cj_2_1[[1]]$p),
+             adjustedRandIndex(simdata$P, cj_2_2[[1]]$p),
+             adjustedRandIndex(simdata$P, cj_2_3[[1]]$p),
+             adjustedRandIndex(simdata$P, cj_2_4[[1]]$p),
+             adjustedRandIndex(simdata$P, cj_2_5[[1]]$p),
+             
+             adjustedRandIndex(simdata$P, cj_3_1[[1]]$p),
+             adjustedRandIndex(simdata$P, cj_3_2[[1]]$p),
+             adjustedRandIndex(simdata$P, cj_3_3[[1]]$p),
+             adjustedRandIndex(simdata$P, cj_3_4[[1]]$p),
+             adjustedRandIndex(simdata$P, cj_3_5[[1]]$p))
+    
+    LOSS <- c(NA,
+              NA,
+              NA,
+              tail( cj_1_4[[1]]$lossiter, n = 1),
+              tail( cj_1_5[[1]]$lossiter, n = 1),
+              
+              tail( cj_2_1[[1]]$lossiter, n = 1),
+              tail( cj_2_2[[1]]$lossiter, n = 1),
+              tail( cj_2_3[[1]]$lossiter, n = 1),
+              tail( cj_2_4[[1]]$lossiter, n = 1),
+              tail( cj_2_5[[1]]$lossiter, n = 1),
+              
+              tail( cj_3_1[[1]]$lossiter, n = 1),
+              tail( cj_3_2[[1]]$lossiter, n = 1),
+              tail( cj_3_3[[1]]$lossiter, n = 1),
+              tail( cj_3_4[[1]]$lossiter, n = 1),
+              tail( cj_3_5[[1]]$lossiter, n = 1))
+  }else{
+    ARI <- c(adjustedRandIndex(simdata$P, cj_1_1[[1]]$p),
+             adjustedRandIndex(simdata$P, cj_1_2[[1]]$p),
+             adjustedRandIndex(simdata$P, cj_1_3[[1]]$p),
+             adjustedRandIndex(simdata$P, cj_1_4[[1]]$p),
+             adjustedRandIndex(simdata$P, cj_1_5[[1]]$p),
+             
+             adjustedRandIndex(simdata$P, cj_2_1[[1]]$p),
+             adjustedRandIndex(simdata$P, cj_2_2[[1]]$p),
+             adjustedRandIndex(simdata$P, cj_2_3[[1]]$p),
+             adjustedRandIndex(simdata$P, cj_2_4[[1]]$p),
+             adjustedRandIndex(simdata$P, cj_2_5[[1]]$p),
+             
+             adjustedRandIndex(simdata$P, cj_3_1[[1]]$p),
+             adjustedRandIndex(simdata$P, cj_3_2[[1]]$p),
+             adjustedRandIndex(simdata$P, cj_3_3[[1]]$p),
+             adjustedRandIndex(simdata$P, cj_3_4[[1]]$p),
+             adjustedRandIndex(simdata$P, cj_3_5[[1]]$p))
+    
+    LOSS <- c(tail( cj_1_1[[1]]$lossiter, n = 1),
+              tail( cj_1_2[[1]]$lossiter, n = 1),
+              tail( cj_1_3[[1]]$lossiter, n = 1),
+              tail( cj_1_4[[1]]$lossiter, n = 1),
+              tail( cj_1_5[[1]]$lossiter, n = 1),
+              
+              tail( cj_2_1[[1]]$lossiter, n = 1),
+              tail( cj_2_2[[1]]$lossiter, n = 1),
+              tail( cj_2_3[[1]]$lossiter, n = 1),
+              tail( cj_2_4[[1]]$lossiter, n = 1),
+              tail( cj_2_5[[1]]$lossiter, n = 1),
+              
+              tail( cj_3_1[[1]]$lossiter, n = 1),
+              tail( cj_3_2[[1]]$lossiter, n = 1),
+              tail( cj_3_3[[1]]$lossiter, n = 1),
+              tail( cj_3_4[[1]]$lossiter, n = 1),
+              tail( cj_3_5[[1]]$lossiter, n = 1))
+  }
+ 
   names <- c('cj_1_1',
              'cj_1_2',
              'cj_1_3',
@@ -252,9 +316,7 @@ for(sim in 1:nrow(grid)){
   
   RESULT <- data.frame(ARI,LOSS)
   rownames(RESULT) <- names
-  time <- proc.time() - tmp
-  time
-  ext <- paste('Sim2_',grid[sim, ]$rep,'.Rdata',sep = '')
-  
-  save(RESULT, file = ext)
+  ext <- paste('/home/durieuxj/data/CJICA_results/Sim2/',
+               'CJICA_sim2_',rows[sim], '.Rdata',sep = '')
+  save(output,file = ext)
 }

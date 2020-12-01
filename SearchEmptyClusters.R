@@ -43,10 +43,10 @@ SearchEmptyClusters <- function(nClus, newcluster, SSminVec) {
   }
   return(newcluster)
 }
-p <- rep(2,100)
-p <- c(p, rep(3,100))
-table(p)
+#p <- rep(2,100)
+#p <- c(p, rep(3,100))
+#table(p)
 
-newp <- SearchEmptyClusters(nClus = 4, newcluster = p, SSminVec = Lir$lossvec)
-table(newp)
-Avoid_nc_N(newcluster = newp, SSminVec = Lir$lossvec, nc = 2) %>% table
+#newp <- SearchEmptyClusters(nClus = 4, newcluster = p, SSminVec = Lir$lossvec)
+#table(newp)
+#Avoid_nc_N(newcluster = newp, SSminVec = Lir$lossvec, nc = 2) %>% table

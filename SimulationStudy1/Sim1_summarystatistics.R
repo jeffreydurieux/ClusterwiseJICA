@@ -6,7 +6,7 @@
 
 load('/Volumes/LaCie/MyData/CJICA/Sim1/Sim1_results_df.Rdata')
 res <- data
-
+library(doBy)
 ########### SUMMARY STATISTICS ##########
 
 ######## ARI ########
@@ -38,7 +38,7 @@ plot(res$ARI, res$ARI_trueP, ylim = c(0,1), asp=T)
 abline(0,1)
 
 range(res$ARI_perbP)
-plot(res$ARI, res$ARI_perbP, ylim = c(0,1))
+plot(res$ARI, res$ARI_perbP, ylim = c(0,1), asp=T)
 abline(0,1)
 
 ######## check loss of random100 vs trueP and perb_P #####
@@ -96,9 +96,14 @@ cbind(ari_anova_res$ANOVA,ef = ari_anova_res$ANOVA$ges %>% round(digits = 3))
 
 
 
+###### check ratio of difficult conditions ####
+summary_by(data = res, formula = ARI ~ ratio:E)
+summary_by(data = res, formula = ARI ~ ratio:rho:E)
 
 
-##########
+
+
+3##########
 summary <- summary_by(data = res, formula = ARI ~ Q:N:E)
 ratio <- summary$N/summary$Q
 cbind(summary,ratio)

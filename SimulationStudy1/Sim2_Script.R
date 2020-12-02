@@ -21,6 +21,7 @@ source('computeXhats.R')
 source('Avoid_nc_N.R')
 source('Simulate_CJICA.R')
 source('ClusterwiseJICA.R')
+source('SearchEmptyClusters.R')
 
 
 specc_err <- function(x, centers){

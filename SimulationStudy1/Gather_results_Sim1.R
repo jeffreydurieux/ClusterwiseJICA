@@ -119,18 +119,3 @@ save(LOSSperbrange, file = '../Sim1_results_LOSSperbrange_list.Rdata')
 #### graph of loss 100 summary ####
 
 
-library(HistogramTools)
-
-range01 <- function(x){(x-min(x))/(max(x)-min(x))}
-
-h1 <- range01(output1$loss100)
-h2 <- range01(output2$loss100)
-h1 <- hist(h1, plot = F)
-h2 <- hist(h2, plot = F)
-plot(h1)
-plot(h2)
-hadd <- AddHistograms(h1,h2)
-par(mfrow=c(1,3))
-plot(hadd)
-# unlist matrix perbrange to matrix 
-#matrix(unlist(LOSSperbrange, recursive = F), ncol = 2, byrow = T)

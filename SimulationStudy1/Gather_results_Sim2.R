@@ -83,31 +83,3 @@ dat <- cbind(grid,res)
 
 save(dat, file = '/Volumes/LaCie/MyData/CJICA/Sim2/Sim2_results_df.Rdata')
 
-######## Quick statistics #######
-library(doBy)
-
-summary_by(data = res, formula = 
-             cj_1_1_ARI+
-             cj_1_2_ARI+
-             cj_1_3_ARI+
-             cj_1_4_ARI+
-             cj_1_5_ARI ~
-             rho*E*N, na.rm = T)
-
-summary_by(data = res, formula = 
-             cj_2_1_ARI+
-             cj_2_2_ARI+
-             cj_2_3_ARI+
-             cj_2_4_ARI+
-             cj_2_5_ARI ~
-             ., na.rm = T)
-
-summary_by(data = res, formula = 
-             cj_3_1_ARI+
-             cj_3_2_ARI+
-             cj_3_3_ARI+
-             cj_3_4_ARI+
-             cj_3_5_ARI ~
-             ., na.rm = T)
-
-

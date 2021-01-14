@@ -30,6 +30,7 @@ XhatsAndLir <- function(X, Sr, Ahats){
   out$lossvec <- lossvec
   out$loss <- loss
   out$vaf <- vaf
+  out$ss <- ss
   return(out)
 }
 

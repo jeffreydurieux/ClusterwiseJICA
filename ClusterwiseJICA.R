@@ -88,6 +88,7 @@ ClusterwiseJICA <- function(X, k = 2, nc = 2, starts = 10, scale = T, rational =
     out$p <- Lir$newp
     out$ica <- icaparam
     out$lossiter <- lossiter
+    out$Lir <- Lir
     ResultsStarts[[start]] <- out
   }
   

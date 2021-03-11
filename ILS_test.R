@@ -144,8 +144,9 @@ E <- c(.2, .4, .75)
 grid <- expand.grid(Q = Q, R = R, N = N, rho = rho, E = E)
 
 
-sim <- which(grid$Q==2 & grid$R == 4 & grid$N == 20 & grid$rho ==0.75 & grid$E == 0.4)
+sim <- which(grid$Q==5 & grid$R == 2 & grid$N == 20 & grid$rho ==0.5 & grid$E == 0.4)
 
+# example Q=5 R =2 N = 20 rho = .5 E = 0.4 seed 110
 seed <- as.numeric(rownames(grid))[sim]
 set.seed(seed)
 
@@ -214,8 +215,8 @@ scale=T
 start <- 1
 rational = cjica[[opt]]$p
 #rational = lossvault[,id]
-k = 4
-nc = 2
+k = 2
+nc = 5
 
 if(scale == T){
   f1 <- sqrt(5000/sum(X[1:2500,]^2))
@@ -240,6 +241,7 @@ iter_since_lowest <- 0
 lowestflag <- 0
 ##### manual loop #####
 
+set.seed(seed)
 while(iter_since_lowest <=20 & dynam <= 20 & lowestflag <= 20 ){
   iter <- iter + 1
   
@@ -303,7 +305,13 @@ while(iter_since_lowest <=20 & dynam <= 20 & lowestflag <= 20 ){
   
   print(lossiter)
   mclust::adjustedRandIndex(simdata$P,Lir$newp)
-  plot(lossiter[-1])
+  if(length(lossiter) <= 20){
+    title <- c('Random start ALS')  
+  }else{
+    title <- c('ILS based perturbation')
+  }
+  
+  plot(lossiter[-1], ylim = c(2800,4000), ylab = 'Loss', main = title)
   #abs(lossiter[iter + 1] - lossiter[iter])  < .00001
   lossiter[iter] - lossiter[iter + 1]  < .00001
   lowest <- min(lossiter)
@@ -383,6 +391,37 @@ while(iter_since_lowest <=20 & dynam <= 20 & lowestflag <= 20 ){
   dynam
   lowestflag
   lossvault[,id]
+  
+  
+  #### combine plots of random 10 start and ILS procedure
+  # grid[110,] seed 110
+  res <- c(losses[-1], lossiter[-1])
+  plot(res)
+  
+  range(res)
+  plot(losses[-1], xlim = c(0,128),ylim = c(2900,4000),col = 'darkgreen', 
+       ylab = '', xlab = '')
+  points(x = 10:128, y = res[-c(1:9)] )
+  
+  a1 <- locator(2)
+  a2 <- locator(2)
+  co.x <- cbind(a1$x,a2$x)
+  co.y <- cbind(a1$y,a2$y)
+  
+  arrows(x0=co.x[2,], y0 = co.y[2,], x1 = co.x[1,], y1 = co.y[1,])
+  text(x=co.x[2,], y=co.y[2,], labels=c("ARI = 0.14", "ARI = 1"), col=c("1", "1"), pos=c(1, 3), xpd=TRUE)
+  mclust::adjustedRandIndex(simdata$P,cjica[[opt]]$p) # best of 10 random ARI
+  round(runs[id,],digits = 3) # ILS ending ARI
+  
+  ##### extra info plot 
+  a3 <- locator(2)
+  a4 <- locator(2)
+  co.x <- cbind(a3$x,a4$x)
+  co.y <- cbind(a3$y,a4$y)
+  
+  arrows(x0=co.x[2,], y0 = co.y[2,], x1 = co.x[1,], y1 = co.y[1,])
+  text(x=co.x[2,], y=co.y[2,], labels=c("Dynamische perturbatie", "Dynamische perturbatie"), col=c("1", "1"), pos=c(3, 3), xpd=TRUE)
+  
   ####### notes ######
     
   # after convergence, add rankperb =1. 
@@ -390,7 +429,199 @@ while(iter_since_lowest <=20 & dynam <= 20 & lowestflag <= 20 ){
   # if convergence 
 
 
+#### function that does the ILS procedure #####
+  
+ILSclusterwise <- function(X, p=NULL, Q, R, termination =20){
+  
+  start <- 1
+  rational <- p
+  k <- R
+  nc <- Q
+  
+  # scaling, only for clusterwise joint ICA simulation design!
+  f1 <- sqrt(5000/sum(X[1:2500,]^2))
+  f2 <- sqrt(5000/sum(X[2501:5000,]^2))
+  X1 <- f1*X[1:2500,]
+  X2 <- f2*X[2501:5000,]
+  X <- rbind(X1,X2)
+  
+  totalSS <- sum(X^2)
+  lossiter <- totalSS + 1
+  iter <- 0
+  
+  dynam <- 1
+  flagoccur <- 0
+  iter_since_lowest <- 0
+  lowestflag <- 0
+  
+  
+  
+  
+  while(iter_since_lowest <=termination & dynam <= 20 & lowestflag <= termination){
+    
+    iter <- iter + 1
+    
+    
+    if(iter >= 2){
+      cat('Start: ', start ,'Iteration ', iter, ' loss value: ', lossiter[iter],'VAF:' ,Lir$vaf ,'\n')  
+    }else{
+      cat('Start: ', start, 'Iteration ', iter, ' loss value: ', lossiter[iter],'\n') 
+    }
+    
+    
+    # algo step 1
+    if(iter == 1){
+      if(!is.null(rational)){
+        p <- rational
+        lossvault <- p
+        t <- 0
+        while( any( table(p)  < nc ) & t < 100 ){
+          clusters <- 1:k
+          
+          id <- which(table(p) < nc)  
+          id_to_take <- which(table(p) > nc)
+          id_to_take <- which(p == id_to_take)
+          
+          s <- sample(id_to_take, size = 1)
+          p[s] <- sample(id, size = 1)
+          
+          t <- t + 1
+        }
+        
+        
+      }else{
+        p <- CICA:::clusf(ncol(X), nClus = k)
+        lossvault <- p
+      }
+    }else{
+      p <- Lir$newp
+      lossvault <- cbind(lossvault,p)
+    }
+    List <- sortX(X, p)
+    
+    # algo step 2
+    
+    #### add stop warning over here ##### about nc <= k_n 
+    icaparam <- ICAonList(List, nc = nc)
+    
+    # algo step 3
+    Ahh <- Ahats(X = X, icapara = icaparam)
+    Lir <- XhatsAndLir(X = X, Sr = icaparam$Sr, Ahats = Ahh)
+    
+    # avoid empty clusters
+    if( length(unique(Lir$p)) < k ){
+      Lir$newp <- SearchEmptyClusters(nClus = k, newcluster = Lir$newp, 
+                                      SSminVec = Lir$lossvec)
+    }
+    
+    # avoid clus size lower than nc
+    Lir$newp <- Avoid_nc_N(Lir$newp, Lir$lossvec, nc = nc)
+    
+    lossiter <- c(lossiter, Lir$loss)
+    
+    print(lossiter)
+    #mclust::adjustedRandIndex(simdata$P,Lir$newp)
+    plot(lossiter[-1])
+    
+    lossiter[iter] - lossiter[iter + 1]  < .00001
+    
+    lowest <- min(lossiter)
+    lowestflag <- sum(lowest == lossiter)
+    iter_since_lowest <- length(lossiter) - tail(which(lossiter==lowest), n = 1)
+    
+    if(lowestflag == 1 | lowestflag == 2 ){
+      if(iter_since_lowest > 5){
+        dynam <- dynam + 1
+      }else{
+        dynam <- 1
+      }
+    }else if(lowestflag == 4){
+      if(iter_since_lowest > 5){
+        dynam <- dynam + 1
+      }else{
+        dynam <- 2
+      }
+      flagoccur <- flagoccur + 1
+    }else if(lowestflag == 6){
+      if(iter_since_lowest > 5){
+        dynam <- dynam + 1
+      }else{
+        dynam <- 3
+      }
+      flagoccur <- flagoccur + 1
+    }else if(lowestflag == 8){
+      if(iter_since_lowest > 5){
+        dynam <- dynam + 1
+      }else{
+        dynam <- 4
+      }
+      flagoccur <- flagoccur + 1
+    }
+    
+    
+    #if climbing and equal to lowest occurred: increase rankperb
+    # if not climbing but converged: increase rankperb by one
+    # if only climbing: rankperb by 2
+    # if bouncing above lowest (after 5 iters) increase dynam
+    
+    
+    if(sign(lossiter[iter] - lossiter[iter+1]) == 0 & lossiter[iter+1] == lowest){
+      dynam <- dynam + 1
+      Lir$newp <- rankperb(Lir = Lir, nobj = dynam)
+      #cat('a \n')
+    }else if(sign(lossiter[iter] - lossiter[iter+1]) == 0){
+      Lir$newp <- rankperb(Lir = Lir, nobj = 1)  
+    }else if(sign(lossiter[iter] - lossiter[iter+1]) == -1){
+      Lir$newp <- rankperb(Lir = Lir, nobj = 2)
+    }
+    
+    if(iter_since_lowest > 5){
+      dynam <- dynam + 1
+      Lir$newp <- rankperb(Lir = Lir, nobj = dynam)
+    }
+    print(lossiter)
+    
 
+    
+    
+  }
+  
+  
+  #check aris and loss 
+  
+  runs <- cbind(apply(lossvault,MARGIN = 2, adjustedRandIndex, simdata$P),lossiter[-1])
+  id <- which.min(runs[,2])
+  
+  out <- list()
+  out$p <- lossvault[, id]
+  out$Lir <- Lir
+  out$ICA <- icaparam
+  
+  return(out)
+}
 
+  
+  ##### ILS function test #####
+test <- ILSclusterwise(X = simdata$Xe, p = cjica[[opt]]$p, 
+                       Q =grid[sim,]$Q ,R = grid[sim,]$R)
+  
+  
+  
+  
+##### partitioning coefficient ######
+test$p  
+mclust::adjustedRandIndex(simdata$P,cjica[[opt]]$p)
+mclust::adjustedRandIndex(simdata$P,test$p)
+  
+test$Lir$ss
+SS <- cjica[[opt]]$Lir$ss
 
+partitioningcoef <- function(SS){
+  a <- apply(SS,MARGIN = 1, scaleprob)
+  a <- 1-a
+  
+  partcoef <- apply(a, MARGIN = 2, FUN = max)
+  return(sum(partcoef)/length(partcoef))
+}
+partitioningcoef(SS)
 

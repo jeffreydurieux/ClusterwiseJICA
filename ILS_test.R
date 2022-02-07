@@ -143,8 +143,8 @@ E <- c(.2, .4, .75)
 
 grid <- expand.grid(Q = Q, R = R, N = N, rho = rho, E = E)
 
-
-sim <- which(grid$Q==5 & grid$R == 2 & grid$N == 20 & grid$rho ==0.5 & grid$E == 0.4)
+##### select data condition #####
+sim <- which(grid$Q==2 & grid$R == 2 & grid$N == 30 & grid$rho ==0 & grid$E == 0.2)
 
 # example Q=5 R =2 N = 20 rho = .5 E = 0.4 seed 110
 seed <- as.numeric(rownames(grid))[sim]
@@ -167,9 +167,9 @@ simdata <- Simulate_CJICA(Nk = grid[sim,]$N,
                           type = type 
 )
 
-rat <- c(rep(1,20), rep(2,20), rep(3,20))
+rat <- c(rep(1,20), rep(2,20))#  , rep(3,20))
 cjica <- ClusterwiseJICA(X = simdata$Xe, k = grid[sim,]$R,
-                         nc = grid[sim, ]$Q, starts = 10, scale = T)
+                         nc = grid[sim, ]$Q, starts = 50, scale = T)
 
 losses <- sapply(seq_along(cjica), function(lam) tail(cjica[[lam]]$lossiter, n = 1) )
 plot(losses)
@@ -601,18 +601,25 @@ ILSclusterwise <- function(X, p=NULL, Q, R, termination =20){
 }
 
   
-  ##### ILS function test #####
+  ##### 08-06-21-ILS function test #####
+  
 test <- ILSclusterwise(X = simdata$Xe, p = cjica[[opt]]$p, 
-                       Q =grid[sim,]$Q ,R = grid[sim,]$R)
+                       Q =grid[sim,]$Q ,R = grid[sim,]$R, termination = 100)
+
   
-  
-  
+testtrue <- ILSclusterwise(X = simdata$Xe, p = rat , 
+                       Q =grid[sim,]$Q ,R = grid[sim,]$R, termination = 100)
+
+test$Lir$loss
+testtrue$Lir$loss
   
 ##### partitioning coefficient ######
 test$p  
 mclust::adjustedRandIndex(simdata$P,cjica[[opt]]$p)
 mclust::adjustedRandIndex(simdata$P,test$p)
-  
+mclust::adjustedRandIndex(simdata$P,testtrue$p)  
+
+
 test$Lir$ss
 SS <- cjica[[opt]]$Lir$ss
 

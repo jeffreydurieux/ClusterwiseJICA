@@ -52,6 +52,7 @@ ClusterwiseJICA <- function(X, k = 2, nc = 2, starts = 10, scale = T, rational =
           
         }else{
           p <- CICA:::clusf(ncol(X), nClus = k)
+          
         }
       }else{
         p <- Lir$newp

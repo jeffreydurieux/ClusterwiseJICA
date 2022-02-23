@@ -15,3 +15,4 @@ source('Avoid_nc_N.R')
 source('Simulate_CJICA.R')
 source('ClusterwiseJICA.R')
 
+#test

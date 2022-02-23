@@ -71,6 +71,7 @@ ILSclusterwise <- function(X, p=NULL, Q, R, termination =20){
       p <- Lir$newp
       lossvault <- cbind(lossvault,p)
     }
+    
     List <- sortX(X, p)
     
     # algo step 2

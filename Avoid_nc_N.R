@@ -54,11 +54,11 @@ Avoid_nc_N <- function(newcluster, SSminVec, nc) {
 # Avoid_nc_N(newcluster = p, SSminVec = SS, nc = 20 ) %>% table()
 
 
-p <- c(1,1,1,1,1,1,1,1,
-       2,3,3,1,4,4,1,1,1,1,1,1)
-
-p <- rep(1,240)
-p <- c(p, rep(1,10))
-table(p)
-SS <- runif(n = 250, min = .01, max = 5)
-Avoid_nc_N(newcluster = p, SSminVec = SS, nc = 20 ) %>% table()
+# p <- c(1,1,1,1,1,1,1,1,
+#        2,3,3,1,4,4,1,1,1,1,1,1)
+# 
+# p <- rep(1,240)
+# p <- c(p, rep(1,10))
+# table(p)
+# SS <- runif(n = 250, min = .01, max = 5)
+# Avoid_nc_N(newcluster = p, SSminVec = SS, nc = 20 ) %>% table()

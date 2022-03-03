@@ -24,9 +24,9 @@ ClusterwiseJICA <- function(X, k = 2, nc = 2, starts = 10, scale = T, rational =
     repeat{
       iter <- iter + 1
       if(iter >= 2){
-        cat('Start: ', start ,'Iteration ', iter, ' loss value: ', lossiter[iter],'VAF:' ,Lir$vaf ,'\n')  
+        #cat('Start: ', start ,'Iteration ', iter, ' loss value: ', lossiter[iter],'VAF:' ,Lir$vaf ,'\n')  
       }else{
-        cat('Start: ', start, 'Iteration ', iter, ' loss value: ', lossiter[iter],'\n') 
+        #cat('Start: ', start, 'Iteration ', iter, ' loss value: ', lossiter[iter],'\n') 
       }
       
       
@@ -78,7 +78,7 @@ ClusterwiseJICA <- function(X, k = 2, nc = 2, starts = 10, scale = T, rational =
       Lir$newp <- Avoid_nc_N(Lir$newp, Lir$lossvec, nc = nc)
       
       lossiter <- c(lossiter, Lir$loss)
-      #abs(lossiter[iter + 1] - lossiter[iter])  < .00001
+      
       if( lossiter[iter] - lossiter[iter + 1]  < .00001){
         break()
       }

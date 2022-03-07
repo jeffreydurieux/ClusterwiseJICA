@@ -7,6 +7,15 @@
 
 
 ICAonList <- function(List, nc){
+  
+  #if else statement does not really matter. ica_adjust and ica::icafast give same results
+  # included here only in testphase of coding
+  if(nc == 1){
+    Result <- lapply(List, FUN = icafast_adjust, nc = nc) 
+  }else{
+    Result <- lapply(List, FUN = ica::icafast, nc = nc) 
+  }
+  
   Result <- lapply(List, FUN = ica::icafast, nc = nc) 
   S <- lapply(seq_along(Result), function(anom) Result[[anom]]$S)
   M <- lapply(seq_along(Result), function(anom) Result[[anom]]$M)

@@ -1,5 +1,6 @@
 # Wed Mar  2 15:26:57 2022
 # Author: Jeffrey Durieux, MSc
+#https://link.springer.com/content/pdf/10.1007%2F978-3-319-07124-4_8.pdf
 
 # ILS algorithm for CJICA
 
@@ -142,7 +143,7 @@ E <- c(.2, .4, .75)
 grid <- expand.grid(Q = Q, R = R, N = N, rho = rho, E = E)
 
 ##### select data condition #####
-sim <- which(grid$Q==2 & grid$R == 2 & grid$N == 30 & grid$rho ==0 & grid$E == 0.75)
+sim <- which(grid$Q==2 & grid$R == 2 & grid$N == 50 & grid$rho ==0 & grid$E == 0.4)
 
 # example Q=5 R =2 N = 20 rho = .5 E = 0.4 seed 110
 seed <- as.numeric(rownames(grid))[sim]
@@ -215,80 +216,129 @@ X1 <- f1*X[1:2500,]
 X2 <- f2*X[2501:5000,]
 X <- rbind(X1,X2)
 
-##### save loss ####
-lossvault <- x$Lir$loss
-pvault <- x$Lir$newp
-Lirvault <- list(x$Lir)
-Lir <- x$Lir
+X = simdata$Xe; k = grid[sim,]$R;
+nc = grid[sim, ]$Q; starts = 1; scale = T
+stepsize = 1
 
-ilsiter <- 100
-it <- 0
-n <- length(Lir$newp)
-itvault <- 0
-losstrack <- x$Lir$loss
-temperature <- 1
-tempstep <- 1
-#https://link.springer.com/content/pdf/10.1007%2F978-3-319-07124-4_8.pdf
-
-
-while(it < ilsiter & temperature < n){
+ILS_CJICA <- function(X, k, nc, scale = TRUE, iter, stepsize, titlevec){
   
-  it <- it + 1
-  cat('Temperature equals :',temperature, fill = TRUE)
-  newp <- rankperb(Lir = Lirvault[[which.min(lossvault)]], nobj = temperature)
+  if(scale == TRUE){
+    f1 <- sqrt(5000/sum(X[1:2500,]^2))
+    f2 <- sqrt(5000/sum(X[2501:5000,]^2))
+    X1 <- f1*X[1:2500,]
+    X2 <- f2*X[2501:5000,]
+    X <- rbind(X1,X2)
+  }
   
-  repeat{
-    loss1 <- Lir$loss
-    List <- sortX(X, newp)
-    icaparam <- ICAonList(List, nc = nc)
-    Ahh <- Ahats(X = X, icapara = icaparam)
-    Lir <- XhatsAndLir(X = X, Sr = icaparam$Sr, Ahats = Ahh)
-    loss2 <- Lir$loss
-    newp <- Lir$newp
+  x <- ClusterwiseJICA(X = X, k = k, nc = nc, starts = 1, scale = scale)
+  x <- x[[1]]
+  
+  lossvault <- x$Lir$loss
+  pvault <- x$Lir$newp
+  Lirvault <- list(x$Lir)
+  Lir <- x$Lir
+  
+  n <- length(x$Lir$newp)
+  it <- 0
+  itvault <- 0
+  losstrack <- x$Lir$loss
+  temperature <- 1
+  tempstep <- stepsize
+  
+  
+  #it < iter & temperature < n
+  while(it < iter){
     
-    loss1 - loss2
-    losstrack <- c(losstrack,loss2)
-    plot(losstrack)
+    it <- it + 1
+    cat('Temperature equals :',temperature, fill = TRUE)
+    cat('Iteration: ', it, fill = TRUE)
+    newp <- rankperb(Lir = Lirvault[[which.min(lossvault)]], nobj = temperature)
     
-    if(loss1 - loss2 < .01){
+    repeat{
+      loss1 <- Lir$loss
+      List <- sortX(X, newp)
+      icaparam <- ICAonList(List, nc = nc)
+      Ahh <- Ahats(X = X, icapara = icaparam)
+      Lir <- XhatsAndLir(X = X, Sr = icaparam$Sr, Ahats = Ahh)
+      loss2 <- Lir$loss
+      newp <- Lir$newp
       
-      if(sign(loss1-loss2) == -1){
-        #increase in loss
-        cat('increase')
-        temperature <- temperature + tempstep
-        break()
-      }else if(sign(loss1-loss2) == 0){
-        # equal loss
+      loss1 - loss2
+      losstrack <- c(losstrack,loss2)
+      plot(losstrack, main = adjustedRandIndex(titlevec, newp))
+      
+      if(loss1 - loss2 < .01){
         
-        if(loss2 %in% lossvault){
-          #if loss2 already in lossvault: increase temp
+        if(sign(loss1-loss2) == -1){
+          #increase in loss
+          cat('increase')
           temperature <- temperature + tempstep
+          break()
+        }else if(sign(loss1-loss2) == 0){
+          # equal loss
+          
+          if(loss2 %in% lossvault){
+            #if loss2 already in lossvault: increase temp
+            temperature <- temperature + tempstep
+            break()
+          }
+          
+          if(loss2 > min(lossvault)){
+            temperature <- temperature + tempstep
+            break()
+          }
+          
+          temperature <- 1
+          lossvault <- c(lossvault, loss2)
+          pvault <- cbind(pvault, newp)
+          Lirvault <- c(Lirvault, list(Lir))
+          itvault <- c(itvault,it)
           break()
         }
         
-        if(loss2 > min(lossvault)){
-          temperature <- temperature + tempstep
-          break()
-        }
-        
-        temperature <- 1
-        lossvault <- c(lossvault, loss2)
-        pvault <- cbind(pvault, newp)
-        Lirvault <- c(Lirvault, list(Lir))
-        itvault <- c(itvault,it)
         break()
-      }
-      
-      
-      
-      break()
-    } # end if
-  }# end repeat
-}#end while
-it
-temperature
+      } # end if
+    }# end repeat
+  }#end while
+  
+  out <- list()
+  out$lossvault <- lossvault
+  out$pvault <- pvault
+  out$Lirvault <- Lirvault
+  out$itvault <- itvault
+  
+  List <- sortX(X, newp)
+  icaparam <- ICAonList(List, nc = nc)
+  out$solution$ica <- icaparam
+  out$solution$Lir <- Lir
+  out$solution$p <- Lir$newp
+  
+  
+  return(out)
+}
 
-lossvault
-pvault
+##### 
+Tucker <- function(X, Y){
+  return (diag(1 / sqrt(colSums(X^2))) %*% crossprod(X,Y) %*% diag(1 / sqrt(colSums(Y^2))) )
+}
+rm(test)
+X <- simdata$Xe; k = length(simdata$S); nc = ncol(simdata$S[[1]])
+test <- ILS_CJICA(X = X,k = k,nc = nc,scale = TRUE, iter = 1000,stepsize = 5)
+test$lossvault
+mclust::adjustedRandIndex(simdata$P, test$solution$p)
 
-adjustedRandIndex(pvault[,ncol(pvault)], simdata$P)
+Tucker(simdata$S[[1]], test$solution$ica$Sr[[1]])
+Tucker(simdata$S[[1]], test$solution$ica$Sr[[2]])
+
+Tucker(simdata$S[[2]], test$solution$ica$Sr[[1]])
+Tucker(simdata$S[[2]], test$solution$ica$Sr[[2]])
+
+
+
+rat <- ClusterwiseJICA(X = X, k = 2, nc = nc, starts = 1, scale = TRUE, rational = simdata$P)
+rat[[1]]$p
+tail(rat[[1]]$lossiter,1)
+
+
+
+

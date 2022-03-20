@@ -47,7 +47,7 @@ icafast_adjust <- function (X, nc, center = TRUE, maxit = 100, tol = 1e-06, Rmat
   Pmat <- xeig$vec[, 1:nc] %*% Dmat
   Xw <- X %*% Pmat
   if (nc == 1L) {
-    return(list(S = Xw, M = Mprt, W = t(Pmat), Y = Xw, Q = t(Pmat), 
+    return(list(S = Xw, M = t(Mprt), W = t(Pmat), Y = Xw, Q = t(Pmat), 
                 R = matrix(1), vafs = (sum(Mprt^2) * nobs)/sum(X^2), 
                 iter = NA, alg = alg, fun = fun, alpha = alpha))
   }
@@ -154,3 +154,16 @@ icafast_adjust <- function (X, nc, center = TRUE, maxit = 100, tol = 1e-06, Rmat
               alg = alg[1], fun = fun, alpha = alpha))
 }
 
+
+# set.seed(123)
+# nobs <- 1000
+# Amat <- cbind(icasamp("a","rnd",nobs),icasamp("b","rnd",nobs))
+# Bmat <- matrix(2*runif(10),5,2)
+# Xmat <- tcrossprod(Amat,Bmat)
+# 
+# # ICA via FastICA with 2 components
+# test1 <- icafast(Xmat, 2) # error
+# test2 <- icafast_adjust(Xmat, 1)
+# test2$vafs
+# multiway::congru(Amat, test2$S)
+# multiway::congru(Bmat, test2$M)

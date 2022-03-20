@@ -2,7 +2,7 @@
 # Author: Jeffrey Durieux, MSc
 
 # Main function of clusterwise JICA
-ClusterwiseJICA <- function(X, k = 2, nc = 2, starts = 10, scale = T, rational = NULL){
+ClusterwiseJICA <- function(X, k = 2, nc = 2, starts = 10, scale = T, rational = NULL, verbose = F){
   #### change this
   
   if(scale == T){
@@ -24,9 +24,15 @@ ClusterwiseJICA <- function(X, k = 2, nc = 2, starts = 10, scale = T, rational =
     repeat{
       iter <- iter + 1
       if(iter >= 2){
-        #cat('Start: ', start ,'Iteration ', iter, ' loss value: ', lossiter[iter],'VAF:' ,Lir$vaf ,'\n')  
+        
+        if(verbose == TRUE){
+          cat('Start: ', start ,'Iteration ', iter, ' loss value: ', lossiter[iter],'VAF:' ,Lir$vaf ,'\n')    
+        }
+        
       }else{
-        #cat('Start: ', start, 'Iteration ', iter, ' loss value: ', lossiter[iter],'\n') 
+        if(verbose == TRUE){
+          cat('Start: ', start, 'Iteration ', iter, ' loss value: ', lossiter[iter],'\n')   
+        }
       }
       
       

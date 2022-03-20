@@ -2,24 +2,52 @@
 # Author: Jeffrey Durieux, MSc
 
 
+# Q <- c(2,5,10)
+# R <- c(2, 3, 4)
+# N <- c(20, 30, 50)  --> hoger
+# rho <- c(0, .50, .75)
+# E <- c(.2, .4, .75) --> .60
+# rep <- 1:20
+
+# cluster meer op elkaar
+# maskering van blocks
+# laten zien dat jointica  beter is dan individueel
+
 # What: summary statistics of clusterwise JICA simulation 1
 
+library(doBy)
 load('/Volumes/LaCie/MyData/CJICA/Sim1/Sim1_results_df.Rdata')
 res <- data
-library(doBy)
+ratio <- res$N/res$Q
+res <- cbind(res,ratio)
+
+#id <- which(res$E==.75 & res$rho==.75 & res$Q==10)
+id1 <- which(res$E==.75) 
+id2 <- which(res$N==20) 
+id3 <- which(res$N==30)
+id3 <- which(res$Q==10)
+id <- c(id1,id2,id3)
+res <- res[-id,]
+
+
 ########### SUMMARY STATISTICS ##########
 
 ######## ARI ########
-summary_by(data = res, formula = ARI ~ .)
-summary_by(data = res, formula = ARI ~ Q)
-summary_by(data = res, formula = ARI ~ R)
-summary_by(data = res, formula = ARI ~ rho)
-summary_by(data = res, formula = ARI ~ E)
-summary_by(data = res, formula = ARI ~ N)
+summary_by(data = res, formula = ARI ~ ., FUN = c(mean,sd))
+summary_by(data = res, formula = ARI ~ Q, FUN = c(mean,sd))
+summary_by(data = res, formula = ARI ~ R, FUN = c(mean,sd))
+summary_by(data = res, formula = ARI ~ rho, FUN = c(mean,sd))
+summary_by(data = res, formula = ARI ~ E, FUN = c(mean,sd))
+summary_by(data = res, formula = ARI ~ N, FUN = c(mean,sd))
 
-summary_by(data = res, formula = ARI ~ N:Q)
-summary_by(data = res, formula = ARI ~ rho:Q)
-summary_by(data = res, formula = ARI ~ E:N)
+summary_by(data = res, formula = ARI ~ ratio:E, FUN = c(mean,sd))
+
+
+summary_by(data = res, formula = ARI ~ N*E, FUN = c(mean,sd))
+
+summary_by(data = res, formula = ARI ~ N:Q, FUN = c(mean,sd))
+summary_by(data = res, formula = ARI ~ rho:Q, FUN = c(mean,sd))
+summary_by(data = res, formula = ARI ~ E:N, FUN = c(mean,sd))
 
 ####### ARI true P #######
 summary_by(data = res, formula = ARI_trueP ~ .)
